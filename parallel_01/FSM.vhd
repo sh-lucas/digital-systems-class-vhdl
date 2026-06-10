@@ -26,6 +26,7 @@ architecture Behavioral of FSM is
     signal state, next_state : state_type := Idle;
 
     -- selects do mux, dizem oq entra em s11, s12, s21, s22...
+    -- o chatgpt que recomendou usar constant; faz sentido?
     constant sel_a : std_logic_vector(2 downto 0) := "000";
     constant sel_b : std_logic_vector(2 downto 0) := "001";
     constant sel_c : std_logic_vector(2 downto 0) := "010";
@@ -40,8 +41,8 @@ architecture Behavioral of FSM is
     constant op_sub : std_logic_vector(1 downto 0) := "01";
     constant op_mul : std_logic_vector(1 downto 0) := "10";
     constant op_byp : std_logic_vector(1 downto 0) := "11"; -- "bypass", tipo, não faz nada
-    -- OBS.: chatgpt disse que é bom ter esse bypass... Cheguei a usar em uns regs, mas queria
-    -- saber se não faz mais sentido usar enables???
+    -- OBS.: chatgpt disse que é bom ter esse bypass... Cheguei a usar nos caminhos ali, mas queria
+    -- saber se não faz mais sentido usar enables??? Sei lá, meio confuso ainda kkkk
 
 begin
 

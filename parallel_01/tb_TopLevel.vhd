@@ -54,6 +54,7 @@ begin
         start <= '0';
 
         wait until ready = '1';
+        report "Caso 1 finalizado em " & time'image(now) severity note;
         wait for clk_period;
         
         assert (result = 203)
@@ -71,6 +72,7 @@ begin
         start <= '0';
 
         wait until ready = '1';
+        report "Caso 2 finalizado em " & time'image(now) severity note;
         wait for clk_period;
         
         assert (result = 4)
