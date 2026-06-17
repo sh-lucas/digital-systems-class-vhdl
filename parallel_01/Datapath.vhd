@@ -69,13 +69,13 @@ begin
     begin
         case s21 is
             when "000" => mux21_out <= a;
-            when "001" => mux21_out <= b;
+            -- when "001" => mux21_out <= b;
             when "010" => mux21_out <= c;
-            when "011" => mux21_out <= reg1;
+            -- when "011" => mux21_out <= reg1;
             when "100" => mux21_out <= reg2;
             when "101" => mux21_out <= 0;
             when "110" => mux21_out <= 3;
-            when "111" => mux21_out <= 6;
+            -- when "111" => mux21_out <= 6;
             when others => mux21_out <= 0;
         end case;
     end process;
@@ -113,7 +113,7 @@ begin
     begin
         case op2 is
             when "00" => ula2_out <= mux21_out + mux22_out;
-            when "01" => ula2_out <= mux21_out - mux22_out;
+            -- when "01" => ula2_out <= mux21_out - mux22_out;
             when "10" => ula2_out <= mux21_out * mux22_out;
             when "11" => ula2_out <= mux21_out;
             when others => ula2_out <= 0;
