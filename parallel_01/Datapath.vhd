@@ -120,10 +120,10 @@ begin
         end case;
     end process;
 
-    -- divisor
+    -- divisor (é só um cara no final, com um estado específico p/ ele. Desse jeito não "sujo" as duas ULAs)
     process (reg1, reg2)
     begin
-        if reg2 = 0 then
+        if reg2 = 0 then -- lidando com divisão por zero, por que vai que
             div_out <= 0;
         else
             div_out <= reg1 / reg2;

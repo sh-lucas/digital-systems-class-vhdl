@@ -62,13 +62,13 @@ is_idle = True
 if is_idle and start:
     is_idle = False
     
-    if a > b:
+    if a > b: # caminho A
         reg1 = c * c; reg2 = a * a
         reg1 = 6 * reg1; reg2 = reg2 * reg2
         reg2 = 3 * reg2
         reg1 = reg1 + reg2; reg2 = a
         reg1 = reg1 - a * b
-    else:
+    else:     # caminho B
         reg1 = b * b
         reg1 = reg1 * b; reg2 = a * a
         reg1 = reg1 + reg2; reg2 = c + b
