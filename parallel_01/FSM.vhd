@@ -40,10 +40,12 @@ architecture Behavioral of FSM is
     constant op_add : std_logic_vector(1 downto 0) := "00";
     constant op_sub : std_logic_vector(1 downto 0) := "01";
     constant op_mul : std_logic_vector(1 downto 0) := "10";
-    constant op_byp : std_logic_vector(1 downto 0) := "11"; -- "bypass", tipo, não faz nada
-    -- OBS.: chatgpt disse que é bom ter esse bypass... Cheguei a usar nos caminhos ali, mas queria
-    -- saber se não faz mais sentido usar enables??? Sei lá, meio confuso ainda kkkk
+    constant op_byp : std_logic_vector(1 downto 0) := "11"; -- "bypass"
 
+    -- bypass é literalmente um disable da ULA em sí, mas no lugar de ser um
+    -- fio a mais a gente aproveita o fio do opcode.
+    -- Talvez não seja a forma mais "limpa" de fazer isso (um enable é padrão)
+    -- mas acabou usando bem menos área.
 begin
 
     -- atualiza estado
