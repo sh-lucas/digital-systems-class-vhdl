@@ -80,17 +80,18 @@ begin
         end case;
     end process;
 
+    -- OBS.: comentei valores não utilizados para evitar disperdício.
     process (s22, a, b, c, reg1, reg2)
     begin
         case s22 is
             when "000" => mux22_out <= a;
             when "001" => mux22_out <= b;
-            when "010" => mux22_out <= c;
-            when "011" => mux22_out <= reg1;
+            -- when "010" => mux22_out <= c;
+            -- when "011" => mux22_out <= reg1;
             when "100" => mux22_out <= reg2;
             when "101" => mux22_out <= 0;
-            when "110" => mux22_out <= 3;
-            when "111" => mux22_out <= 6;
+            -- when "110" => mux22_out <= 3;
+            -- when "111" => mux22_out <= 6;
             when others => mux22_out <= 0;
         end case;
     end process;
