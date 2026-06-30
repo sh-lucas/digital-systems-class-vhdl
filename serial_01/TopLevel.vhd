@@ -15,11 +15,9 @@ end TopLevel;
 
 architecture Structural of TopLevel is
     -- fios de controle
-    signal sig_s11, sig_s12 : std_logic_vector(2 downto 0);
-    signal sig_s21, sig_s22 : std_logic_vector(2 downto 0);
-    signal sig_op1, sig_op2 : std_logic_vector(1 downto 0);
-    signal sig_reg1_en : std_logic;
-    signal sig_reg2_en : std_logic;
+    signal sig_in_sel1, sig_in_sel2 : std_logic_vector(2 downto 0);
+    signal sig_op : std_logic_vector(1 downto 0);
+    signal sig_out_sel : std_logic;
     
     -- fios de status
     signal sig_a_gt_b : std_logic;
@@ -35,14 +33,10 @@ begin
             clk => clk,
             start => start,
             a_gt_b => sig_a_gt_b,
-            s11 => sig_s11,
-            s12 => sig_s12,
-            s21 => sig_s21,
-            s22 => sig_s22,
-            op1 => sig_op1,
-            op2 => sig_op2,
-            reg1_en => sig_reg1_en,
-            reg2_en => sig_reg2_en,
+            in_sel1 => sig_in_sel1,
+            in_sel2 => sig_in_sel2,
+            op => sig_op,
+            out_sel => sig_out_sel,
             ready => ready
         );
 
@@ -53,14 +47,10 @@ begin
             a => a,
             b => b,
             c => c,
-            s11 => sig_s11,
-            s12 => sig_s12,
-            s21 => sig_s21,
-            s22 => sig_s22,
-            op1 => sig_op1,
-            op2 => sig_op2,
-            reg1_en => sig_reg1_en,
-            reg2_en => sig_reg2_en,
+            in_sel1 => sig_in_sel1,
+            in_sel2 => sig_in_sel2,
+            op => sig_op,
+            out_sel => sig_out_sel,
             result => result
         );
 

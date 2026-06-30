@@ -11,7 +11,6 @@ entity FSM is
         op1, op2 : out std_logic_vector(1 downto 0);
         reg1_en : out std_logic;
         reg2_en : out std_logic;
-        load_result : out std_logic;
         ready : out std_logic
     );
 end FSM;
@@ -19,14 +18,12 @@ end FSM;
 architecture Behavioral of FSM is
     type state_type is (
         Idle, Clear,
-        A1, A2, A3, A4, A5, A6,
-        B1, B2, B3,
-        Division
+        A1, A2, A3, A4, A5,
+        B1, B2, B3, B4
     );
     signal state, next_state : state_type := Idle;
 
-    -- selects do mux, dizem oq entra em s11, s12, s21, s22...
-    -- o chatgpt que recomendou usar constant; faz sentido?
+    -- selects do mux
     constant sel_a : std_logic_vector(2 downto 0) := "000";
     constant sel_b : std_logic_vector(2 downto 0) := "001";
     constant sel_c : std_logic_vector(2 downto 0) := "010";
@@ -40,12 +37,8 @@ architecture Behavioral of FSM is
     constant op_add : std_logic_vector(1 downto 0) := "00";
     constant op_sub : std_logic_vector(1 downto 0) := "01";
     constant op_mul : std_logic_vector(1 downto 0) := "10";
-    constant op_byp : std_logic_vector(1 downto 0) := "11"; -- "bypass"
+    constant op_div : std_logic_vector(1 downto 0) := "11"; -- agora div na ULA 1
 
-    -- bypass é literalmente um disable da ULA em sí, mas no lugar de ser um
-    -- fio a mais a gente aproveita o fio do opcode.
-    -- Talvez não seja a forma mais "limpa" de fazer isso (um enable é padrão)
-    -- mas acabou usando bem menos área.
 begin
 
     -- atualiza estado
@@ -62,16 +55,13 @@ begin
         case state is
             when Idle =>
                 if start = '1' then
-                    next_state <= Clear;
+                    if a_gt_b = '1' then
+                        next_state <= A1;
+                    else
+                        next_state <= B1;
+                    end if;
                 else
                     next_state <= Idle;
-                end if;
-                
-            when Clear =>
-                if a_gt_b = '1' then
-                    next_state <= A1;
-                else
-                    next_state <= B1;
                 end if;
                 
             -- yes: a > b
@@ -79,15 +69,14 @@ begin
             when A2 => next_state <= A3;
             when A3 => next_state <= A4;
             when A4 => next_state <= A5;
-            when A5 => next_state <= A6;
-            when A6 => next_state <= Division;
+            when A5 => next_state <= Idle;
                 
             -- no: a <= b
             when B1 => next_state <= B2;
             when B2 => next_state <= B3;
-            when B3 => next_state <= Division;
+            when B3 => next_state <= B4;
+            when B4 => next_state <= Idle;
                 
-            when Division => next_state <= Idle;
             when others => next_state <= Idle;
         end case;
     end process;
@@ -95,70 +84,54 @@ begin
     -- decodifica saidas
     process (state)
     begin
-        -- defaults, não sei se precisa:
+        -- defaults
         s11 <= sel_zero;
         s12 <= sel_zero;
         s21 <= sel_zero;
         s22 <= sel_zero;
-        op1 <= op_byp;
-        op2 <= op_byp;
+        op1 <= op_div; -- bypass do ULA 1 é div se mux12 = 0
+        op2 <= op_div;
         reg1_en <= '0';
         reg2_en <= '0';
-        load_result <= '0';
         ready <= '0';
 
         case state is
             when Idle =>
                 ready <= '1';
                 
-            when Clear =>
-                s11 <= sel_zero;
-                s12 <= sel_zero;
-                op1 <= op_byp;
-                reg1_en <= '1';
-                
-                s21 <= sel_zero;
-                s22 <= sel_zero;
-                op2 <= op_byp;
-                reg2_en <= '1';
-                
             -- yes (a > b) path
             when A1 =>
-                s11 <= sel_c; s12 <= sel_c; op1 <= op_mul; reg1_en <= '1';
-                s21 <= sel_a; s22 <= sel_a; op2 <= op_mul; reg2_en <= '1';
+                s11 <= sel_c; s12 <= sel_c; op1 <= op_mul; reg1_en <= '1'; -- reg1 = c*c
+                s21 <= sel_a; s22 <= sel_a; op2 <= op_mul; reg2_en <= '1'; -- reg2 = a*a
                 
             when A2 =>
-                s11 <= sel_six; s12 <= sel_reg1; op1 <= op_mul; reg1_en <= '1';
-                s21 <= sel_reg2; s22 <= sel_reg2; op2 <= op_mul; reg2_en <= '1';
+                s11 <= sel_six; s12 <= sel_reg1; op1 <= op_mul; reg1_en <= '1'; -- reg1 = 6*reg1
+                s21 <= sel_reg2; s22 <= sel_a; op2 <= op_mul; reg2_en <= '1'; -- reg2 = reg2*a
                 
             when A3 =>
-                s21 <= sel_three; s22 <= sel_reg2; op2 <= op_mul; reg2_en <= '1';
+                s11 <= sel_reg1; s12 <= sel_a; op1 <= op_div; reg1_en <= '1'; -- reg1 = reg1/a
+                s21 <= sel_three; s22 <= sel_reg2; op2 <= op_mul; reg2_en <= '1'; -- reg2 = 3*reg2
                 
             when A4 =>
-                s11 <= sel_reg1; s12 <= sel_reg2; op1 <= op_add; reg1_en <= '1';
-                s21 <= sel_a; s22 <= sel_zero; op2 <= op_byp; reg2_en <= '1';
+                s21 <= sel_reg2; s22 <= sel_b; op2 <= op_sub; reg2_en <= '1'; -- reg2 = reg2-b
                 
             when A5 =>
-                s21 <= sel_a; s22 <= sel_b; op2 <= op_mul; reg2_en <= '1';
+                s11 <= sel_reg2; s12 <= sel_reg1; op1 <= op_add; reg1_en <= '1'; -- reg1 = reg2+reg1 (result)
                 
-            when A6 =>
-                s11 <= sel_reg1; s12 <= sel_reg2; op1 <= op_sub; reg1_en <= '1';
-                s21 <= sel_a; s22 <= sel_zero; op2 <= op_byp; reg2_en <= '1';
-                
-            -- no path (fica bem menor)
+            -- no path
             when B1 =>
-                s11 <= sel_b; s12 <= sel_b; op1 <= op_mul; reg1_en <= '1';
-                s21 <= sel_a; s22 <= sel_a; op2 <= op_mul; reg2_en <= '1';
+                s11 <= sel_b; s12 <= sel_b; op1 <= op_mul; reg1_en <= '1'; -- reg1 = b*b
+                s21 <= sel_a; s22 <= sel_a; op2 <= op_mul; reg2_en <= '1'; -- reg2 = a*a
                 
             when B2 =>
-                s11 <= sel_reg1; s12 <= sel_b; op1 <= op_mul; reg1_en <= '1';
+                s11 <= sel_reg1; s12 <= sel_b; op1 <= op_mul; reg1_en <= '1'; -- reg1 = reg1*b
                 
             when B3 =>
-                s11 <= sel_reg1; s12 <= sel_reg2; op1 <= op_add; reg1_en <= '1';
-                s21 <= sel_c; s22 <= sel_b; op2 <= op_add; reg2_en <= '1';
+                s11 <= sel_reg1; s12 <= sel_reg2; op1 <= op_add; reg1_en <= '1'; -- reg1 = reg1+reg2
+                s21 <= sel_c; s22 <= sel_b; op2 <= op_add; reg2_en <= '1'; -- reg2 = c+b
                 
-            when Division =>
-                load_result <= '1';
+            when B4 =>
+                s11 <= sel_reg1; s12 <= sel_reg2; op1 <= op_div; reg1_en <= '1'; -- reg1 = reg1/reg2 (result)
                 
             when others =>
                 null;

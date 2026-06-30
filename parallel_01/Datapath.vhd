@@ -1,6 +1,5 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
 
 entity Datapath is
     Port (
@@ -11,7 +10,6 @@ entity Datapath is
         op1, op2 : in std_logic_vector(1 downto 0);
         reg1_en : in std_logic;
         reg2_en : in std_logic;
-        load_result : in std_logic;
         result : out integer
     );
 end Datapath;
@@ -19,7 +17,6 @@ end Datapath;
 architecture Behavioral of Datapath is
     -- registradores
     signal reg1, reg2 : integer := 0;
-    signal reg_result : integer := 0;
     
     -- muxes
     signal mux11_out, mux12_out : integer;
@@ -27,9 +24,6 @@ architecture Behavioral of Datapath is
     
     -- ulas
     signal ula1_out, ula2_out : integer;
-    
-    -- divisor
-    signal div_out : integer;
 
 begin
 
@@ -69,41 +63,45 @@ begin
     begin
         case s21 is
             when "000" => mux21_out <= a;
-            -- when "001" => mux21_out <= b;
+            when "001" => mux21_out <= b;
             when "010" => mux21_out <= c;
-            -- when "011" => mux21_out <= reg1;
+            when "011" => mux21_out <= reg1;
             when "100" => mux21_out <= reg2;
             when "101" => mux21_out <= 0;
             when "110" => mux21_out <= 3;
-            -- when "111" => mux21_out <= 6;
+            when "111" => mux21_out <= 6;
             when others => mux21_out <= 0;
         end case;
     end process;
 
-    -- OBS.: comentei valores não utilizados para evitar disperdício.
     process (s22, a, b, c, reg1, reg2)
     begin
         case s22 is
             when "000" => mux22_out <= a;
             when "001" => mux22_out <= b;
-            -- when "010" => mux22_out <= c;
-            -- when "011" => mux22_out <= reg1;
+            when "010" => mux22_out <= c;
+            when "011" => mux22_out <= reg1;
             when "100" => mux22_out <= reg2;
             when "101" => mux22_out <= 0;
-            -- when "110" => mux22_out <= 3;
-            -- when "111" => mux22_out <= 6;
+            when "110" => mux22_out <= 3;
+            when "111" => mux22_out <= 6;
             when others => mux22_out <= 0;
         end case;
     end process;
 
-    -- ula 1
+    -- ula 1 (op_div = "11" agora faz divisao inteira, assim como no serial)
     process (mux11_out, mux12_out, op1)
     begin
         case op1 is
             when "00" => ula1_out <= mux11_out + mux12_out;
             when "01" => ula1_out <= mux11_out - mux12_out;
             when "10" => ula1_out <= mux11_out * mux12_out;
-            when "11" => ula1_out <= mux11_out;
+            when "11" => 
+                if mux12_out = 0 then
+                    ula1_out <= 0;
+                else
+                    ula1_out <= mux11_out / mux12_out;
+                end if;
             when others => ula1_out <= 0;
         end case;
     end process;
@@ -113,21 +111,11 @@ begin
     begin
         case op2 is
             when "00" => ula2_out <= mux21_out + mux22_out;
-            -- when "01" => ula2_out <= mux21_out - mux22_out;
+            when "01" => ula2_out <= mux21_out - mux22_out;
             when "10" => ula2_out <= mux21_out * mux22_out;
-            when "11" => ula2_out <= mux21_out;
+            when "11" => ula2_out <= mux21_out; -- bypass
             when others => ula2_out <= 0;
         end case;
-    end process;
-
-    -- divisor (é só um cara no final, com um estado específico p/ ele. Desse jeito não "sujo" as duas ULAs)
-    process (reg1, reg2)
-    begin
-        if reg2 = 0 then -- lidando com divisão por zero, por que vai que
-            div_out <= 0;
-        else
-            div_out <= reg1 / reg2;
-        end if;
     end process;
 
     -- registradores
@@ -140,12 +128,10 @@ begin
             if reg2_en = '1' then
                 reg2 <= ula2_out;
             end if;
-            if load_result = '1' then
-                reg_result <= div_out;
-            end if;
         end if;
     end process;
 
-    result <= reg_result;
+    -- result conectado diretamente ao reg1
+    result <= reg1;
 
 end Behavioral;
