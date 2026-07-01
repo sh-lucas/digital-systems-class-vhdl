@@ -118,18 +118,26 @@ begin
         end case;
     end process;
 
-    -- registradores
+    -- registrador 1
     process (clk)
     begin
         if rising_edge(clk) then
             if reg1_en = '1' then
                 reg1 <= ula1_out;
             end if;
+        end if;
+    end process;
+
+    -- registrador 2
+    process (clk)
+    begin
+        if rising_edge(clk) then
             if reg2_en = '1' then
                 reg2 <= ula2_out;
             end if;
         end if;
     end process;
+
 
     -- result conectado diretamente ao reg1
     result <= reg1;
